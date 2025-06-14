@@ -1,5 +1,7 @@
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+# import deepspeed
+# import os
 
 def load_model_strategy_a(model_id: str):
     """
@@ -67,7 +69,7 @@ def load_model_strategy_b(model_id: str, balanced_layers: bool = True):
         balanced_layers: If True, use balanced 16:16 layer distribution
                         If False, use auto distribution
     """
-    print(f"Strategy B: INT8 quantization + 2-GPU tensor parallelism model loading... ({model_id})")
+    print(f"Strategy B (PP): INT8 quantization + 2-GPU pipeline parallelism model loading... ({model_id})")
     
     quantization_config = BitsAndBytesConfig(
         load_in_8bit=True
@@ -99,6 +101,27 @@ def load_model_strategy_b(model_id: str, balanced_layers: bool = True):
     print("Model loading completed.")
     return model, tokenizer
 
+def load_model_strategy_b_tp(model_id: str):
+    """
+    Strategy B with Tensor Parallelism: Load INT8 quantized model on 2 GPUs.
+    
+    TODO: INT8 + Tensor Parallelism implementation
+    Current limitation: DeepSpeed CUDA accelerator does not support torch.int8 
+    with tensor parallelism (tp_size > 1).
+    
+    Possible solutions:
+    1. Use Triton kernels: init_inference(..., use_triton=True)
+    2. Implement custom INT8 TP solution
+    ...
+    
+    For now, this function is not implemented.
+    """
+    print(f"Strategy B (TP): INT8 + 2-GPU Tensor Parallelism - NOT IMPLEMENTED YET")
+    raise NotImplementedError(
+        "INT8 quantization with DeepSpeed Tensor Parallelism is not supported "
+        "by CUDA accelerator. We will implement this in the future."
+    )
+
 def load_model_baseline(model_id: str, balanced_layers: bool = True):
     """
     Baseline: Load BFloat16 model based on 2 GPUs.
@@ -110,7 +133,7 @@ def load_model_baseline(model_id: str, balanced_layers: bool = True):
         balanced_layers: If True, use balanced 16:16 layer distribution
                         If False, use auto distribution
     """
-    print(f"Baseline: BF16 + 2-GPU tensor parallelism model loading... ({model_id})")
+    print(f"Baseline (PP): BF16 + 2-GPU pipeline parallelism model loading... ({model_id})")
     
     tokenizer = AutoTokenizer.from_pretrained(model_id, local_files_only=True)
     # Set pad token to eos token if not already set

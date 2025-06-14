@@ -10,3 +10,4 @@ scipy
 ipywidgets
 psutil
 tqdm
+# deepspeed

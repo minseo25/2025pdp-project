@@ -3,7 +3,7 @@ import os
 import torch
 import json
 from datetime import datetime
-from src.model_loader import load_model_strategy_a, load_model_strategy_b, load_model_baseline
+from src.model_loader import load_model_strategy_a, load_model_strategy_b, load_model_baseline, load_model_strategy_b_tp
 from src.evaluate import measure_latency_throughput, calculate_perplexity, get_memory_usage
 
 RESULTS_DIR = "results"
@@ -16,18 +16,20 @@ def main(args):
 
     if is_distributed and args.strategy == "int4_1gpu":
         if local_rank == 0:
-            print("Error: int4_1gpu strategy cannot be run in distributed mode (torchrun).")
+            print("Error: int4_1gpu strategy cannot be run in distributed mode.")
         return
 
     # Load model
     if args.strategy == "int4_1gpu":
         model, tokenizer = load_model_strategy_a(args.model_path)
     elif args.strategy == "int8_2gpu":
-        model, tokenizer = load_model_strategy_b(args.model_path)
+        model, tokenizer = load_model_strategy_b(args.model_path, balanced_layers=True)
+    elif args.strategy == "int8_2gpu_tp":
+        model, tokenizer = load_model_strategy_b_tp(args.model_path)
     elif args.strategy == "baseline":
-        model, tokenizer = load_model_baseline(args.model_path)
+        model, tokenizer = load_model_baseline(args.model_path, balanced_layers=True)
     else:
-        raise ValueError("Unknown strategy. Choose from 'int4_1gpu', 'int8_2gpu', 'baseline'.")
+        raise ValueError("Unknown strategy.")
 
     # Only evaluate on rank 0
     if local_rank == 0:
@@ -39,7 +41,6 @@ def main(args):
         print("--- Measure performance (Latency & Throughput) ---")
         prompt_text = "The art of parallel and distributed computing is"
         
-        # Measure latency (batch_size=1)
         latency, _ = measure_latency_throughput(model, tokenizer, prompt_text, 128, 1)
         print(f"Latency (Batch Size 1): {latency:.4f} ms/token")
 
@@ -95,7 +96,14 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="LLM inference performance benchmark script")
     parser.add_argument("--model_path", type=str, required=True, help="Local model weight path (e.g., ./models/Llama-3-8b)")
-    parser.add_argument("--strategy", type=str, required=True, choices=["int4_1gpu", "int8_2gpu", "baseline"], help="Inference strategy to run")
+    # choices에 새로운 TP 전략을 추가합니다.
+    parser.add_argument(
+        "--strategy", 
+        type=str, 
+        required=True, 
+        choices=["int4_1gpu", "int8_2gpu", "baseline", "int8_2gpu_tp"], 
+        help="Inference strategy to run"
+    )
     
     args = parser.parse_args()
     main(args)

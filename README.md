@@ -6,25 +6,44 @@ This project compares the performance of INT4 quantization on a single GPU versu
 
 ```
 /
-├── models/             # Hugging Face model weights repository
-├── src/                # Source code modules
-│   ├── model_loader.py   # Model loading logic
-│   └── evaluate.py       # Performance/accuracy measurement logic
-├── run_benchmark.py      # Main benchmarking execution script
-├── profile_torch.py      # PyTorch Profiler execution script
-├── profile_nsys.sh       # Nsight Systems execution wrapper
-├── requirements.txt      # Python library list
-└── README.md             # Project documentation
+├── models/                     # Hugging Face model weights repository
+├── src/                        # Source code modules
+│   ├── model_loader.py         # Model loading logic
+│   └── evaluate.py             # Performance/accuracy measurement logic
+├── run_benchmark.py            # Main benchmarking execution script
+├── analyze_profile_results.py  # Profile results analysis and visualization
+├── profile_torch.py            # PyTorch Profiler execution script
+├── profile_nsys.sh             # Nsight Systems execution wrapper
+├── requirements.txt            # Python library list
+└── README.md                   # Project documentation
 ```
 
 ## Installation
 
 1.  Set up your Python environment and install the required libraries.
+    (CUDA toolkit and nvcc should be pre-installed for your server)
     ```bash
     python3 -m venv .venv
     source .venv/bin/activate
     pip install -r requirements.txt
     ```
+<!-- 
+2.  Configure Accelerate for multi-GPU setup
+    
+    Initialize Accelerate configuration for optimal multi-GPU performance:
+    ```bash
+    accelerate config
+    ```
+    
+    **Recommended settings:**
+    - **Compute environment**: This machine
+    - **Machine type**: multi-GPU  
+    - **Number of machines**: 1
+    - **Number of GPUs**: 2
+    - **Mixed precision**: bf16 (for A100 tensor cores optimization)
+    - **Other options**: Default values
+    
+    <img src="imgs/accelerate_config.png" alt="Accelerate Config Screenshot" width="600"> -->
 
 2.  Download the Llama model from Hugging Face to the `models` directory.
     ```bash
@@ -50,12 +69,18 @@ Use the `run_benchmark.py` script to measure the performance of each strategy.
 python run_benchmark.py --model_path ./models/Llama-3-8b --strategy int4_1gpu
 ```
 
-**Strategy B: INT8 + 2 GPU (Tensor Parallel)**
+**Strategy B: INT8 + 2 GPU (Piepline Parallel)**
 ```bash
 python run_benchmark.py --model_path ./models/Llama-3-8b --strategy int8_2gpu
 ```
 
-**Baseline: BF16 + 2 GPU (Tensor Parallel)**
+**Strategy B with TP: INT8 + 2 GPU (Tensor Parallel)**
+
+- For now, this function is not implemented.
+- INT8 quantization with DeepSpeed Tensor Parallelism is not supported by CUDA accelerator.
+- Possible solutions would be : 1) Use Triton kernels, 2) Implement custom INT8 TP solution
+
+**Baseline: BF16 + 2 GPU (Pipeline Parallel)**
 ```bash
 python run_benchmark.py --model_path ./models/Llama-3-8b --strategy baseline
 ```
