@@ -53,7 +53,7 @@ def load_model_strategy_b(model_id: str):
         model_id,
         quantization_config=quantization_config,
         torch_dtype=torch.bfloat16,
-        tp_plan="auto", # For true tensor parallelism, use tp_plan
+        device_map="auto",
         local_files_only=True,
     )
 
@@ -76,7 +76,7 @@ def load_model_baseline(model_id: str):
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
         torch_dtype=torch.bfloat16,
-        tp_plan="auto",
+        device_map="auto",
         local_files_only=True,
     )
 

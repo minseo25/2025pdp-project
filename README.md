@@ -51,14 +51,13 @@ python run_benchmark.py --model_path ./models/Llama-3-8b --strategy int4_1gpu
 ```
 
 **Strategy B: INT8 + 2 GPU (Tensor Parallel)**
-Must be executed in a distributed environment using `torchrun`.
 ```bash
-torchrun --nproc_per_node=2 run_benchmark.py --model_path ./models/Llama-3-8b --strategy int8_2gpu
+python run_benchmark.py --model_path ./models/Llama-3-8b --strategy int8_2gpu
 ```
 
 **Baseline: BF16 + 2 GPU (Tensor Parallel)**
 ```bash
-torchrun --nproc_per_node=2 run_benchmark.py --model_path ./models/Llama-3-8b --strategy baseline
+python run_benchmark.py --model_path ./models/Llama-3-8b --strategy baseline
 ```
 
 ### 2. Advanced Profiling

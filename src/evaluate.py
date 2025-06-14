@@ -51,9 +51,10 @@ def calculate_perplexity(model, tokenizer):
     """
     print("Calculating Perplexity manually...")
     
-    # 1. Load test dataset and sample first 100 texts
+    # 1. Load test dataset and use half of the data
     test = load_dataset("wikitext", "wikitext-2-raw-v1", split="test")
-    sample_texts = test["text"][:100]  # use first 100 texts
+    half_size = len(test["text"]) // 2
+    sample_texts = test["text"][:half_size]  # 절반만 사용
     encodings = tokenizer("\n\n".join(sample_texts), return_tensors="pt")
 
     # 2. Setup for Perplexity calculation
