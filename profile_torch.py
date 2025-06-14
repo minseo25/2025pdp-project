@@ -2,17 +2,15 @@ import argparse
 import torch
 from torch.profiler import profile, record_function, ProfilerActivity
 from src.model_loader import load_model_strategy_b
-from src.evaluate import measure_latency_throughput
 
 def main(args):
     # This script focuses on profiling the INT8 2-GPU strategy.
+    # 'device_map="auto"' handles the multi-GPU distribution internally.
     model, tokenizer = load_model_strategy_b(args.model_path)
     
     prompt = "Profiling distributed systems requires careful instrumentation."
     
-    # Only run and output on rank 0
-    if torch.distributed.get_rank() == 0:
-        print("PyTorch Profiler for INT8 2-GPU strategy profiling started...")
+    print("PyTorch Profiler for INT8 2-GPU strategy profiling started...")
     
     with profile(
         activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
@@ -27,14 +25,16 @@ def main(args):
                 max_new_tokens=64
             )
 
-    if torch.distributed.get_rank() == 0:
-        print("Profiling results:")
-        print(prof.key_averages(group_by_input_shape=True).table(sort_by="self_cuda_time_total", row_limit=20))
-        # Save profiling results for visualization in TensorBoard
-        prof.export_chrome_trace("trace.json")
+    print("Profiling results:")
+    print(prof.key_averages(group_by_input_shape=True).table(sort_by="self_cuda_time_total", row_limit=20))
+    
+    # Save profiling results for visualization in TensorBoard
+    trace_file = "trace_int8_2gpu.json"
+    prof.export_chrome_trace(trace_file)
+    print(f"Profiler trace saved to: {trace_file}")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--model_path", type=str, default="./models/Llama-3-8b")
+    parser = argparse.ArgumentParser(description="PyTorch Profiler for multi-GPU strategy")
+    parser.add_argument("--model_path", type=str, required=True, help="Local model weight path")
     args = parser.parse_args()
     main(args)

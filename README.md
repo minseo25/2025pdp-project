@@ -65,12 +65,16 @@ python run_benchmark.py --model_path ./models/Llama-3-8b --strategy baseline
 **PyTorch Profiler (Operator Level)**
 `profile_torch.py` analyzes CUDA kernel execution times for the INT8 2-GPU strategy.
 ```bash
-torchrun --nproc_per_node=2 profile_torch.py --model_path ./models/Llama-3-8b
+python profile_torch.py --model_path ./models/Llama-3-8b
 ```
 
 **NVIDIA Nsight Systems (System/Communication Level)**
 The `profile_nsys.sh` shell script uses `nsys` to trace the entire system and NCCL communication.
 ```bash
-./profile_nsys.sh
+apt update && apt search nsight
+apt install -y nsight-systems-2025.1.3
+
+chmod +x ./profile_nsys.sh
+./profile_nsys.sh ./models/Llama-3-8b
 ```
 After profiling is complete, you can open the generated `profile_int8_2gpu.nsys-rep` file with the Nsight Systems UI (`nsys-ui`) application to analyze the timeline in detail.

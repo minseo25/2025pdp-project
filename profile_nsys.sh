@@ -1,8 +1,8 @@
 #!/bin/bash
 # This script profiles the INT8 2-GPU strategy using nsys.
-# Usage: ./profile_nsys.sh
+# Usage: ./profile_nsys.sh <model_path>
 
-MODEL_PATH="./models/Llama-3-8b"
+MODEL_PATH=$1
 OUTPUT_PROFILE="profile_int8_2gpu"
 
 echo "NVIDIA Nsight Systems profiling started..."
@@ -10,9 +10,9 @@ echo "Model path: ${MODEL_PATH}"
 echo "Output file: ${OUTPUT_PROFILE}.nsys-rep"
 
 nsys profile \
-    -t cuda,nvtx,osrt,nccl \
+    -t cuda,nvtx,osrt,cudnn,cublas \
     -o ${OUTPUT_PROFILE} \
     --force-overwrite=true \
-    torchrun --nproc_per_node=2 profile_torch.py --model_path ${MODEL_PATH}
+    python profile_torch.py --model_path ${MODEL_PATH}
 
 echo "Profiling completed. Open ${OUTPUT_PROFILE}.nsys-rep file in nsys-ui to view."
