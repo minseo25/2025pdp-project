@@ -33,6 +33,7 @@ This project compares the performance of INT4 quantization on a single GPU versu
     export HF_CACHE_HOME="./models"
     export TRANSFORMERS_CACHE="./models"
     export HF_HUB_CACHE="./models"
+    mkdir models
     huggingface-cli login
     huggingface-cli download meta-llama/Meta-Llama-3-8B --local-dir models/Llama-3-8b --local-dir-use-symlinks False
     huggingface-cli download meta-llama/Llama-2-13b-chat-hf --local-dir models/Llama-2-13b-chat --local-dir-use-symlinks False
