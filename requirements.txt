@@ -9,3 +9,4 @@ evaluate>=0.4.1
 scipy
 ipywidgets
 psutil
+tqdm

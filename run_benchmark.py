@@ -1,8 +1,13 @@
 import argparse
 import os
 import torch
+import json
+from datetime import datetime
 from src.model_loader import load_model_strategy_a, load_model_strategy_b, load_model_baseline
 from src.evaluate import measure_latency_throughput, calculate_perplexity, get_memory_usage
+
+RESULTS_DIR = "results"
+os.makedirs(RESULTS_DIR, exist_ok=True)
 
 def main(args):
     # If distributed environment, get local rank
@@ -56,6 +61,31 @@ def main(args):
         
         total_peak_vram = sum([gpu_mem['peak'] for gpu_mem in memory_usage['gpu_gb']])
         print(f"Total VRAM usage (Maximum): {total_peak_vram:.2f} GB")
+
+        # 4. Save results to JSON file
+        print("\n--- Saving results ---")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{timestamp}_{args.strategy}.json"
+        filepath = os.path.join(RESULTS_DIR, filename)
+        
+        results = {
+            "timestamp": timestamp,
+            "model_path": args.model_path,
+            "strategy": args.strategy,
+            "latency_ms_per_token": round(latency, 4),
+            "throughput_tokens_per_sec": round(throughput, 4),
+            "perplexity": round(perplexity, 4),
+            "memory_usage": {
+                "cpu_ram_gb": round(memory_usage['ram_gb'], 2),
+                "gpu_memory_gb": memory_usage['gpu_gb'],
+                "total_peak_vram_gb": round(total_peak_vram, 2)
+            }
+        }
+        
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump(results, f, indent=2, ensure_ascii=False)
+        
+        print(f"Results saved to: {filepath}")
 
         print("\n" + "="*50)
         print("Benchmark completed")

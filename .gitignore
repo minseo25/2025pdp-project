@@ -1,8 +1,9 @@
-# Models and virtual environment
+# project files
 models/
 .venv/
 venv/
 env/
+results/
 
 # Python
 __pycache__/
