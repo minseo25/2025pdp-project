@@ -76,5 +76,6 @@ apt install -y nsight-systems-2025.1.3
 
 chmod +x ./profile_nsys.sh
 ./profile_nsys.sh ./models/Llama-3-8b
+python analyze_profile_results.py results/20250614_081830 # timestamp of your profiling logs
 ```
 After profiling is complete, you can open the generated `profile_int8_2gpu.nsys-rep` file with the Nsight Systems UI (`nsys-ui`) application to analyze the timeline in detail.
