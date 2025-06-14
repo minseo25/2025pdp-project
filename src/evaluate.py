@@ -51,9 +51,10 @@ def calculate_perplexity(model, tokenizer):
     """
     print("Calculating Perplexity manually...")
     
-    # 1. Load test dataset and combine all texts into a single string
+    # 1. Load test dataset and sample first 100 texts
     test = load_dataset("wikitext", "wikitext-2-raw-v1", split="test")
-    encodings = tokenizer("\n\n".join(test["text"]), return_tensors="pt")
+    sample_texts = test["text"][:100]  # use first 100 texts
+    encodings = tokenizer("\n\n".join(sample_texts), return_tensors="pt")
 
     # 2. Setup for Perplexity calculation
     max_length = model.config.max_position_embeddings
