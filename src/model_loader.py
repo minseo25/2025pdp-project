@@ -34,7 +34,7 @@ def load_model_strategy_a(model_id: str):
     print("Model loading completed.")
     return model, tokenizer
 
-def create_balanced_device_map():
+def create_balanced_device_map_llama():
     """
     Create a balanced device map for Llama-3-8B (32 layers total)
     - GPU 0: layers 0-15 (16 layers)
@@ -49,6 +49,30 @@ def create_balanced_device_map():
         
         # Second half of transformer layers (16-31) -> GPU 1
         **{f"model.layers.{i}": 1 for i in range(16, 32)},
+        
+        # Final layers
+        "model.norm": 1,
+        "model.rotary_emb": 1,
+        "lm_head": 1,
+    }
+    
+    return device_map
+
+def create_balanced_device_map_qwen():
+    """
+    Create a balanced device map for Qwen2.5 (48 layers total)
+    - GPU 0: layers 0-23 (24 layers)
+    - GPU 1: layers 24-47 (24 layers)
+    """
+    device_map = {
+        # Embedding layer
+        "model.embed_tokens": 0,
+        
+        # First half of transformer layers (0-23) -> GPU 0
+        **{f"model.layers.{i}": 0 for i in range(24)},
+        
+        # Second half of transformer layers (24-47) -> GPU 1
+        **{f"model.layers.{i}": 1 for i in range(24, 48)},
         
         # Final layers
         "model.norm": 1,
@@ -82,10 +106,15 @@ def load_model_strategy_b(model_id: str, balanced_layers: bool = True):
     
     # Choose device map based on balanced_layers flag
     if balanced_layers and "Llama-3-8b" in model_id:
-        device_map = create_balanced_device_map()
+        device_map = create_balanced_device_map_llama()
         print("Using balanced layer distribution:")
         print("  GPU 0: layers 0-15 (16 layers)")
         print("  GPU 1: layers 16-31 (16 layers)")
+    elif balanced_layers and ("Qwen" in model_id or "qwen" in model_id):
+        device_map = create_balanced_device_map_qwen()
+        print("Using balanced layer distribution:")
+        print("  GPU 0: layers 0-23 (24 layers)")
+        print("  GPU 1: layers 24-47 (24 layers)")
     else:
         device_map = "auto"
         print("Using automatic layer distribution")
@@ -142,10 +171,15 @@ def load_model_baseline(model_id: str, balanced_layers: bool = True):
     
     # Choose device map based on balanced_layers flag
     if balanced_layers and "Llama-3-8b" in model_id:
-        device_map = create_balanced_device_map()
+        device_map = create_balanced_device_map_llama()
         print("Using balanced layer distribution:")
         print("  GPU 0: layers 0-15 (16 layers)")
         print("  GPU 1: layers 16-31 (16 layers)")
+    elif balanced_layers and "Qwen2.5-14B" in model_id:
+        device_map = create_balanced_device_map_qwen()
+        print("Using balanced layer distribution:")
+        print("  GPU 0: layers 0-23 (24 layers)")
+        print("  GPU 1: layers 24-47 (24 layers)")
     else:
         device_map = "auto"
         print("Using automatic layer distribution")

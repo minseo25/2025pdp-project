@@ -53,8 +53,8 @@ def calculate_perplexity(model, tokenizer):
     
     # 1. Load test dataset and use quarter of the data
     test = load_dataset("wikitext", "wikitext-2-raw-v1", split="test")
-    quarter_size = len(test["text"]) // 4
-    sample_texts = test["text"][:quarter_size]
+    size = 50
+    sample_texts = test["text"][:size]
     encodings = tokenizer("\n\n".join(sample_texts), return_tensors="pt")
 
     # 2. Setup for Perplexity calculation
