@@ -26,13 +26,29 @@ def measure_latency_throughput(model, tokenizer, prompt: str, num_tokens_to_gene
     prompts = [prompt] * batch_size
     inputs = tokenizer(prompts, return_tensors="pt", padding=True).to(model.device)
 
+    # DeepSeek model check
+    is_deepseek = False
+    if hasattr(model, 'config') and hasattr(model.config, 'model_type'):
+        is_deepseek = 'deepseek' in model.config.model_type.lower()
+    if not is_deepseek:
+        model_class_name = str(type(model)).lower()
+        is_deepseek = 'deepseek' in model_class_name
+
     # warmup
-    _ = model.generate(**inputs, max_new_tokens=5, do_sample=False)
+    if is_deepseek:
+        # disable cache (incompatible with transformers library)
+        _ = model.generate(**inputs, max_new_tokens=5, do_sample=False, use_cache=False)
+    else:
+        _ = model.generate(**inputs, max_new_tokens=5, do_sample=False)
     
     torch.cuda.synchronize()
     start_time = time.perf_counter()
 
-    outputs = model.generate(**inputs, max_new_tokens=num_tokens_to_generate, do_sample=False)
+    if is_deepseek:
+        # disable cache (incompatible with transformers library)
+        outputs = model.generate(**inputs, max_new_tokens=num_tokens_to_generate, do_sample=False, use_cache=False)
+    else:
+        outputs = model.generate(**inputs, max_new_tokens=num_tokens_to_generate, do_sample=False)
     
     torch.cuda.synchronize()
     end_time = time.perf_counter()
