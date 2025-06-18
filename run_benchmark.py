@@ -50,8 +50,12 @@ def main(args):
 
         # 2. Measure accuracy (Perplexity)
         print("\n--- Measure accuracy (Perplexity) ---")
-        perplexity = calculate_perplexity(model, tokenizer)
-        print(f"Perplexity (Wikitext-2): {perplexity:.4f}")
+        try:
+            perplexity = calculate_perplexity(model, tokenizer)
+            print(f"Perplexity (Wikitext-2): {perplexity:.4f}")
+        except Exception as e:
+            print(f"Perplexity calculation failed: {e}")
+            perplexity = -1.0
 
         # 3. Measure memory usage
         print("\n--- Measure memory usage ---")
@@ -75,7 +79,7 @@ def main(args):
             "strategy": args.strategy,
             "latency_ms_per_token": round(latency, 4),
             "throughput_tokens_per_sec": round(throughput, 4),
-            "perplexity": round(perplexity, 4),
+            "perplexity": round(perplexity, 4) if perplexity > 0 else "CUDA_OOM_ERROR",
             "memory_usage": {
                 "cpu_ram_gb": round(memory_usage['ram_gb'], 2),
                 "gpu_memory_gb": memory_usage['gpu_gb'],
